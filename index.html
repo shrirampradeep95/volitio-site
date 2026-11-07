@@ -308,15 +308,38 @@ footer{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;paddin
       stage.appendChild(el); setTimeout(() => el.remove(), 950);
     }
   }
+  // Baby-penguin voice: soft rounded "pweep" chirps that slide upward, with a little wobble.
+  // Each note: [start time, from Hz, to Hz, length]
+  const voices = {
+    tap:   [[0, 520, 980, .11], [.13, 600, 1150, .12]],                                  // "pip-pweep?"
+    happy: [[0, 560, 1000, .09], [.1, 700, 1250, .09], [.2, 820, 1500, .16]],            // "pip-pip-pweeee!"
+    done:  [[0, 900, 760, .08], [.1, 680, 1320, .17]],                                    // "bo-dweep!"
+  };
   function chirp(kind){
     if(muted) return;
     try{
       actx = actx || new (window.AudioContext || window.webkitAudioContext)();
-      const now = actx.currentTime;
-      const seq = kind === 'happy' ? [[880,0],[1320,.09],[1760,.18]] : kind === 'done' ? [[1046,0],[1568,.11]] : [[660,0],[990,.1]];
-      seq.forEach(([f,o]) => { const osc = actx.createOscillator(), g = actx.createGain(); osc.type = 'sine'; osc.frequency.value = f;
-        g.gain.setValueAtTime(0, now+o); g.gain.linearRampToValueAtTime(.12, now+o+.01); g.gain.exponentialRampToValueAtTime(.001, now+o+.1);
-        osc.connect(g).connect(actx.destination); osc.start(now+o); osc.stop(now+o+.12); });
+      if(actx.state === 'suspended') actx.resume();
+      const now = actx.currentTime + .01;
+      const out = actx.createGain(); out.gain.value = .5;
+      const soft = actx.createBiquadFilter(); soft.type = 'lowpass'; soft.frequency.value = 2600; soft.Q.value = 1.2;
+      soft.connect(out).connect(actx.destination);
+      (voices[kind] || voices.tap).forEach(([o, f0, f1, len]) => {
+        const t = now + o;
+        const osc = actx.createOscillator(), g = actx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(f0, t);
+        osc.frequency.exponentialRampToValueAtTime(f1, t + len * .7);
+        osc.frequency.exponentialRampToValueAtTime(f1 * .94, t + len);
+        const lfo = actx.createOscillator(), depth = actx.createGain();          // tiny wobble
+        lfo.frequency.value = 28; depth.gain.value = f1 * .025;
+        lfo.connect(depth).connect(osc.frequency);
+        g.gain.setValueAtTime(0, t);
+        g.gain.linearRampToValueAtTime(.32, t + .015);
+        g.gain.exponentialRampToValueAtTime(.001, t + len);
+        osc.connect(g).connect(soft);
+        osc.start(t); lfo.start(t); osc.stop(t + len + .02); lfo.stop(t + len + .02);
+      });
     }catch(e){}
   }
   const icon = '<svg viewBox="0 0 120 120"><polyline points="28,52 60,100 92,52" stroke="#F4F2ED" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="60" cy="28" r="10" fill="#FF5A1F"/></svg>';
@@ -373,7 +396,7 @@ footer{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;paddin
   order.forEach(k => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = moves[k].label; b.addEventListener('click', () => command(moves[k].label)); chips.appendChild(b); });
   $('#sayform').addEventListener('submit', e => { e.preventDefault(); const i = $('#say'), v = i.value; i.value = ''; command(v); });
   bot.addEventListener('click', () => {
-    chirp(); sparkle(6); say(['Hi!','Beep!','Ready when you are.','That tickles.'][Math.floor(Math.random()*4)], 1500);
+    chirp('tap'); sparkle(6); say(['Hi!','Beep!','Ready when you are.','That tickles.'][Math.floor(Math.random()*4)], 1500);
     if(busy || pose === 'nap') return;
     setPose('happy'); setTimeout(() => { if(pose === 'happy') setPose('idle'); }, 600);
   });
