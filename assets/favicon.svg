@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Volitio"><title>Volitio</title>
+  <rect width="120" height="120" rx="26" fill="#0E0E12"/>
+  <g transform="translate(12,10) scale(0.8)"><polyline points="28,48 60,98 92,48" stroke="#F4F2ED" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  <circle cx="60" cy="28" r="10" fill="#FF5A1F"/></g>
+</svg>

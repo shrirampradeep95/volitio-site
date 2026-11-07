@@ -1,0 +1,416 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Volitio · Meet Volo</title>
+<meta name="description" content="Volo is a tiny robot penguin with the will to act. Say it once. Volo does it, and tells you when it's done.">
+<meta name="theme-color" content="#0E0E12">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<meta property="og:title" content="Meet Volo · Volitio">
+<meta property="og:description" content="A tiny robot penguin with the will to act.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://volitio.in/">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@600;700&family=Inter:wght@400;500&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Dark only, per Volitio brand: Ink ground, Paper type, Ember used sparingly. */
+:root{
+  --ink:#0E0E12; --ink-2:#16161B; --graphite:#2A2A31; --stone:#8A8A93; --paper:#F4F2ED; --ember:#FF5A1F;
+  --pen:#2B2B3A; --spot:rgba(244,242,237,.08);
+  --display:"Inter Tight",Inter,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --body:Inter,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:dark;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;background:var(--ink)}
+body{margin:0;background:var(--ink);color:var(--paper);font:400 17px/1.6 var(--body);-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+img{max-width:100%}
+a{color:inherit}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,a:focus-visible{outline:2px solid var(--ember);outline-offset:3px}
+.wrap{max-width:1120px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px))}
+h1,h2{font-family:var(--display);font-weight:600;letter-spacing:-.025em;text-wrap:balance;margin:0}
+p{margin:0}
+
+/* nav */
+nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:28px}
+.logo{display:flex;color:var(--paper)}
+.logo svg{height:24px;width:auto}
+.navcta{border:1px solid var(--graphite);border-radius:999px;padding:9px 16px;font-size:14px;font-weight:500;text-decoration:none;transition:border-color .2s}
+.navcta:hover{border-color:var(--paper)}
+
+/* hero */
+.hero{display:grid;gap:18px;text-align:center;justify-items:center;padding-block:48px 36px}
+h1{font-size:clamp(52px,9vw,112px);line-height:.95}
+h1 em{font-style:normal;color:var(--ember)}
+.lead{color:var(--stone);font-size:clamp(17px,2vw,20px);max-width:30em}
+
+/* stage */
+.stage{position:relative;height:clamp(360px,52vw,520px);border-radius:28px;overflow:hidden;isolation:isolate;
+  background:radial-gradient(60% 70% at 50% 45%, var(--spot), transparent 70%), var(--ink-2);border:1px solid var(--graphite)}
+.stage::after{content:"";position:absolute;left:-20%;right:-20%;top:62%;bottom:0;pointer-events:none;
+  background:linear-gradient(rgba(244,242,237,.06) 1px,transparent 1px) 0 0/100% 30px,linear-gradient(90deg,rgba(244,242,237,.06) 1px,transparent 1px) 0 0/60px 100%;
+  transform:perspective(440px) rotateX(58deg);transform-origin:top center}
+.door{position:absolute;right:9%;bottom:30%;width:54px;height:104px;border:3px solid var(--paper);border-bottom:0;border-radius:28px 28px 0 0;opacity:.35;z-index:1}
+.door::before{content:"";position:absolute;right:9px;top:54px;width:7px;height:7px;border-radius:50%;background:var(--ember)}
+#botwrap{position:absolute;left:50%;bottom:24%;width:clamp(170px,22vw,230px);transform:translateX(-50%);z-index:2}
+#mover{transition:transform 2.4s linear;will-change:transform}
+#volo{display:block;width:100%;height:auto;overflow:visible;transition:transform .35s ease;cursor:pointer}
+#volo.flip{transform:scaleX(-1)}
+.bubble{position:absolute;left:50%;bottom:calc(24% + clamp(190px,25vw,255px));transform:translateX(-50%) translateY(6px);background:var(--paper);color:var(--ink);border-radius:14px;padding:8px 13px;font-size:14px;font-weight:500;white-space:nowrap;opacity:0;transition:opacity .25s,transform .25s;z-index:3;pointer-events:none}
+.bubble.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.mute{position:absolute;left:14px;top:14px;z-index:4;width:36px;height:36px;border-radius:12px;border:1px solid var(--graphite);background:rgba(14,14,18,.6);color:var(--stone);display:grid;place-items:center;padding:0}
+.mute:hover{color:var(--paper)}
+.mute svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.mute[aria-pressed=true] .wave{display:none}
+
+/* notifications */
+.notes{position:absolute;right:14px;top:14px;z-index:5;display:grid;gap:8px;width:min(290px,calc(100% - 72px));pointer-events:none}
+.note{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:center;background:rgba(244,242,237,.96);color:var(--ink);border-radius:16px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.35);animation:notein .45s cubic-bezier(.2,.9,.3,1.2);transition:opacity .4s,transform .4s}
+.note.out{opacity:0;transform:translateY(-8px)}
+@keyframes notein{from{opacity:0;transform:translateY(-12px) scale(.96)}}
+.note .ic{width:34px;height:34px;border-radius:10px;background:var(--ink);display:grid;place-items:center}
+.note .ic svg{width:22px;height:22px}
+.note b{display:flex;justify-content:space-between;gap:8px;font-size:12px;font-weight:600}
+.note b span{font-weight:500;color:#6B6B74}
+.note p{font-size:14px;line-height:1.35}
+.note p i{font-style:normal;color:#1E8E4C;font-weight:700}
+
+/* controls */
+.controls{display:grid;gap:14px;justify-items:center;padding-block:22px 0}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+.chip{border:1px solid var(--graphite);background:var(--ink-2);border-radius:999px;padding:10px 16px;font-size:15px;font-weight:500;line-height:1;transition:border-color .15s,transform .15s}
+.chip:hover{border-color:var(--paper);transform:translateY(-1px)}
+.chip:disabled{opacity:.45;cursor:default;transform:none}
+.say{display:flex;gap:8px;width:min(560px,100%)}
+.say input{flex:1;min-width:0;border:1px solid var(--graphite);background:var(--ink-2);color:var(--paper);border-radius:14px;padding:13px 16px;font:inherit;font-size:16px}
+.say input::placeholder{color:var(--stone)}
+.btn{border:0;border-radius:14px;padding:13px 20px;background:var(--ember);color:var(--ink);font-weight:600;font-size:15px;text-decoration:none;display:inline-flex;align-items:center;transition:transform .15s,filter .15s}
+.btn:hover{filter:brightness(1.06);transform:translateY(-1px)}
+
+/* beats */
+.beats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding-block:120px 40px}
+@media (max-width:760px){.beats{grid-template-columns:1fr;padding-block:80px 20px}}
+.beat{display:grid;gap:10px;padding-top:22px;border-top:1px solid var(--graphite)}
+.beat h2{font-size:clamp(28px,3.4vw,40px);line-height:1.05}
+.beat p{color:var(--stone)}
+.beat h2 em{font-style:normal;color:var(--ember)}
+
+/* closing */
+.closing{display:grid;justify-items:center;text-align:center;gap:22px;padding-block:120px 80px}
+.closing svg{width:84px;height:84px}
+.closing h2{font-size:clamp(40px,6vw,72px);line-height:1}
+.closing p{color:var(--stone);max-width:28em}
+.love{display:inline-flex;align-items:center;gap:8px}
+.love .heart{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;transition:fill .2s,stroke .2s,transform .2s}
+.love.loved .heart{fill:var(--ember);stroke:var(--ember)}
+.love:active .heart{transform:scale(1.3)}
+.bigheart{padding:16px 26px;font-size:17px;border-radius:999px}
+.bigheart .heart{width:20px;height:20px;stroke:var(--ink)}
+.bigheart.loved .heart{fill:var(--ink);stroke:var(--ink)}
+.lovecount{font:500 13px/1.4 var(--mono);letter-spacing:.06em;color:var(--stone)}
+.floatheart{position:fixed;width:22px;height:22px;pointer-events:none;z-index:50;fill:var(--ember);animation:floatup 1.3s ease-out forwards}
+@keyframes floatup{0%{opacity:0;transform:translate(0,0) scale(.4)}15%{opacity:1}100%{opacity:0;transform:translate(var(--dx),-140px) scale(1.1) rotate(var(--rot))}}
+footer{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;padding-block:28px 40px;border-top:1px solid var(--graphite);color:var(--stone);font:500 12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase}
+
+/* sparks */
+.spark{position:absolute;width:8px;height:8px;border-radius:50%;background:var(--ember);z-index:4;pointer-events:none;animation:pop .9s ease-out forwards}
+.spark.light{background:var(--paper);width:6px;height:6px}
+@keyframes pop{from{transform:translate(0,0) scale(1);opacity:1}to{transform:translate(var(--dx),var(--dy)) scale(.2);opacity:0}}
+
+/* ---------- Volo ---------- */
+#volo *{transform-box:fill-box}
+#body{fill:var(--pen);stroke:var(--paper);stroke-width:3}
+.face{fill:var(--paper)}
+.leg rect{fill:var(--pen);stroke:var(--paper);stroke-width:2}
+.leg .foot{fill:var(--ember);stroke:none}
+.leg{transform-origin:top center;transition:transform .5s cubic-bezier(.34,1.56,.64,1)}
+.wing ellipse{fill:var(--pen);stroke:var(--paper);stroke-width:3;transform-origin:top center}
+.wing{transform-origin:top center;transition:transform .4s ease}
+.wing.l ellipse{transform:rotate(16deg)}
+.wing.r ellipse{transform:rotate(-16deg)}
+.adot{fill:var(--ember)}
+.aglow{fill:url(#glow);opacity:0;transform-origin:center}
+.cheek{fill:var(--ember);opacity:.22}
+.sclera{fill:#fff;stroke:var(--pen);stroke-width:2.5}
+.pupil circle{fill:var(--pen)}
+.pupil .hl{fill:#fff}
+.pupil{transition:transform .12s ease-out}
+.lid{fill:var(--paper)}
+.lid.top{transform-origin:top center;transform:scaleY(0);animation:blink 5.2s infinite}
+.lid.bottom{transform-origin:bottom center;transform:scaleY(.14);transition:transform .25s ease}
+#beak{fill:var(--ember);stroke:var(--ember);stroke-width:4;stroke-linejoin:round}
+#bob{transform-origin:bottom center;animation:bob 2.8s ease-in-out infinite;transition:transform .55s cubic-bezier(.34,1.56,.64,1)}
+#shadow{fill:#000;opacity:.4}
+.zzz text{font:600 22px var(--display);fill:var(--stone);opacity:0}
+@keyframes bob{50%{transform:translateY(-4px)}}
+@keyframes blink{0%,92%,100%{transform:scaleY(0)}95%,97%{transform:scaleY(1)}}
+@keyframes step{from{transform:rotate(-17deg)}to{transform:rotate(17deg)}}
+@keyframes bobfast{50%{transform:translateY(-5px)}}
+@keyframes sway{from{transform:rotate(-7deg) translateY(-2px)}to{transform:rotate(7deg) translateY(-2px)}}
+@keyframes flap{from{transform:rotate(-30deg)}to{transform:rotate(25deg)}}
+@keyframes flapR{from{transform:rotate(30deg)}to{transform:rotate(-25deg)}}
+@keyframes hop{from{transform:translateY(0)}to{transform:translateY(-8px)}}
+@keyframes stomp{0%,100%{transform:translateY(0)}50%{transform:translateY(-18px)}}
+@keyframes shake{0%,100%{transform:translateX(0)}50%{transform:translateX(2px)}}
+@keyframes wave{from{transform:rotate(-70deg)}to{transform:rotate(-125deg)}}
+@keyframes look{0%,100%{transform:rotate(0)}30%{transform:rotate(-9deg)}70%{transform:rotate(9deg)}}
+@keyframes glow{from{opacity:.35;transform:scale(.8)}to{opacity:1;transform:scale(1.5)}}
+@keyframes zz{0%{opacity:0;transform:translateY(6px)}30%{opacity:1}100%{opacity:0;transform:translateY(-14px)}}
+@keyframes boing{0%{transform:scaleY(1)}35%{transform:scaleY(.9) scaleX(1.05)}70%{transform:scaleY(1.06) scaleX(.97)}100%{transform:scaleY(1)}}
+[data-pose=sit] #bob{animation:none;transform:translateY(22px)}
+[data-pose=sit] .leg{transform:scaleY(.5)}
+[data-pose=nap] #bob{animation:none;transform:translateY(24px) rotate(-5deg)}
+[data-pose=nap] .leg{transform:scaleY(.5)}
+[data-pose=nap] .lid.top{animation:none;transform:scaleY(1)}
+[data-pose=nap] .zzz text{animation:zz 1.8s ease-in-out infinite}
+[data-pose=nap] .zzz text:nth-child(2){animation-delay:.5s}
+[data-pose=nap] .zzz text:nth-child(3){animation-delay:1s}
+[data-pose=walk] .leg.l{animation:step .36s ease-in-out infinite alternate}
+[data-pose=walk] .leg.r{animation:step .36s ease-in-out infinite alternate-reverse}
+[data-pose=walk] #bob{animation:bobfast .36s ease-in-out infinite}
+[data-pose=dance] #bob{animation:sway .32s ease-in-out infinite alternate}
+[data-pose=dance] .wing.l{animation:flap .32s ease-in-out infinite alternate}
+[data-pose=dance] .wing.r{animation:flapR .32s ease-in-out infinite alternate}
+[data-pose=dance] .leg.l{animation:hop .32s ease-in-out infinite alternate}
+[data-pose=dance] .leg.r{animation:hop .32s ease-in-out infinite alternate-reverse}
+[data-pose=dance] .lid.bottom,[data-pose=greet] .lid.bottom,[data-pose=happy] .lid.bottom{transform:scaleY(.5)}
+[data-pose=stomp] .leg.l{animation:stomp .24s ease-in-out infinite}
+[data-pose=stomp] .leg.r{animation:stomp .24s ease-in-out infinite;animation-delay:.12s}
+[data-pose=stomp] #bob{animation:shake .24s linear infinite}
+[data-pose=greet] .wing.r{animation:wave .32s ease-in-out infinite alternate}
+[data-pose=look] #bob{animation:look 1.5s ease-in-out}
+[data-pose=happy] #bob{animation:boing .5s ease-out}
+[data-think="1"] .aglow{animation:glow .7s ease-in-out infinite alternate}
+
+@media (max-width:560px){
+  .notes{left:14px;right:14px;top:auto;bottom:14px;width:auto}
+  .mute{top:14px}
+  .door{right:6%}
+}
+@media (prefers-reduced-motion: reduce){
+  #bob,.leg,.wing,.aglow,.lid.top,.zzz text,.note{animation:none!important}
+  #mover,#volo,.pupil,.chip{transition:none!important}
+  .spark{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <nav>
+    <a class="logo" href="#" aria-label="Volitio home">
+      <svg viewBox="12 8 430 104" aria-hidden="true"><polyline points="28,48 60,98 92,48" fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/><circle cx="60" cy="28" r="10" fill="#FF5A1F"/><g transform="translate(130,0)" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"><polyline points="0,50 22,100 44,50"/><circle cx="91" cy="75" r="25"/><line x1="138" y1="20" x2="138" y2="100"/><line x1="160" y1="50" x2="160" y2="100"/><line x1="190" y1="28" x2="190" y2="100"/><line x1="178" y1="50" x2="202" y2="50"/><line x1="224" y1="50" x2="224" y2="100"/><circle cx="271" cy="75" r="25"/></g><g transform="translate(130,0)" fill="#FF5A1F"><circle cx="160" cy="30" r="7"/><circle cx="224" cy="30" r="7"/></g></svg>
+    </a>
+    <button class="navcta love" type="button" data-love aria-label="Love Volo"><svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.5 2.6.9-1.4 2.4-2.6 4.5-2.6 3.7 0 5.8 3.8 4.3 7.2C19.5 16.4 12 21 12 21z"/></svg><span>Love Volo</span></button>
+  </nav>
+
+  <header class="hero">
+    <h1>The will to act<em>.</em></h1>
+    <p class="lead">Meet Volo. Tell it once. It does it, and lets you know when it's done.</p>
+  </header>
+
+  <div class="stage" id="stage">
+    <button class="mute" id="mute" type="button" aria-label="Mute Volo" aria-pressed="false"><svg viewBox="0 0 24 24"><path d="M11 5 6 9H2v6h4l5 4z"/><path class="wave" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="wave" d="M18.5 5.5a9 9 0 0 1 0 13"/></svg></button>
+    <div class="notes" id="notes" aria-live="polite"></div>
+    <div class="door" id="door" aria-hidden="true"></div>
+    <div class="bubble" id="bubble"></div>
+    <div id="botwrap"><div id="mover">
+      <svg id="volo" viewBox="0 0 240 262" data-pose="idle" data-think="0" role="img" aria-label="Volo, a small round robot penguin. Click to say hi.">
+        <defs>
+          <radialGradient id="glow"><stop offset="0" stop-color="#FF5A1F" stop-opacity=".9"/><stop offset="1" stop-color="#FF5A1F" stop-opacity="0"/></radialGradient>
+          <clipPath id="eyeclip"><circle r="19"/></clipPath>
+        </defs>
+        <ellipse id="shadow" cx="120" cy="248" rx="70" ry="7"/>
+        <g id="legs">
+          <g class="leg l"><rect x="86" y="200" width="16" height="32" rx="8"/><rect class="foot" x="66" y="226" width="48" height="14" rx="7"/></g>
+          <g class="leg r"><rect x="138" y="200" width="16" height="32" rx="8"/><rect class="foot" x="126" y="226" width="48" height="14" rx="7"/></g>
+        </g>
+        <g id="bob">
+          <g class="wing l"><ellipse cx="46" cy="152" rx="13" ry="34"/></g>
+          <g class="wing r"><ellipse cx="194" cy="152" rx="13" ry="34"/></g>
+          <path id="body" d="M120 36 C176 36 210 86 210 150 C210 202 172 224 120 224 C68 224 30 202 30 150 C30 86 64 36 120 36 Z"/>
+          <path class="face" d="M120 84 C104 64 62 72 58 114 C54 166 72 216 120 216 C168 216 186 166 182 114 C178 72 136 64 120 84 Z"/>
+          <g><circle class="aglow" cx="120" cy="188" r="17"/><circle class="adot" cx="120" cy="188" r="6"/></g>
+          <ellipse class="cheek" cx="70" cy="136" rx="10" ry="6"/><ellipse class="cheek" cx="170" cy="136" rx="10" ry="6"/>
+          <g class="eye" transform="translate(93 114)"><circle class="sclera" r="19"/><g class="pupil"><circle r="12.5"/><circle class="hl" cx="-4.5" cy="-5" r="4.5"/><circle class="hl" cx="4" cy="4" r="2.2"/></g><g clip-path="url(#eyeclip)"><rect class="lid bottom" x="-21" y="-21" width="42" height="42"/><rect class="lid top" x="-21" y="-21" width="42" height="42"/></g></g>
+          <g class="eye" transform="translate(147 114)"><circle class="sclera" r="19"/><g class="pupil"><circle r="12.5"/><circle class="hl" cx="-4.5" cy="-5" r="4.5"/><circle class="hl" cx="4" cy="4" r="2.2"/></g><g clip-path="url(#eyeclip)"><rect class="lid bottom" x="-21" y="-21" width="42" height="42"/><rect class="lid top" x="-21" y="-21" width="42" height="42"/></g></g>
+          <path id="beak" d="M107 134 Q120 129 133 134 L120 150 Z"/>
+          <g class="zzz"><text x="190" y="56">z</text><text x="208" y="38">z</text><text x="224" y="20">z</text></g>
+        </g>
+      </svg>
+    </div></div>
+  </div>
+
+  <div class="controls">
+    <div class="chips" id="chips" aria-label="Try a command"></div>
+    <form class="say" id="sayform" autocomplete="off">
+      <input id="say" type="text" placeholder="Tell Volo anything…" aria-label="Tell Volo something">
+      <button class="btn" type="submit">Tell Volo</button>
+    </form>
+  </div>
+
+  <section class="beats" aria-label="How Volo works">
+    <div class="beat"><h2>Say it.</h2><p>In plain words, the way you'd ask a friend.</p></div>
+    <div class="beat"><h2>Volo does it.</h2><p>It works out the steps and gets moving.</p></div>
+    <div class="beat"><h2>You get <em>proof</em>.</h2><p>A message the moment it's done, so you never have to wonder.</p></div>
+  </section>
+
+  <section class="closing" id="love">
+    <svg viewBox="0 0 120 120" aria-hidden="true"><polyline points="28,48 60,98 92,48" stroke="#F4F2ED" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="60" cy="28" r="10" fill="#FF5A1F"/></svg>
+    <h2>Volo is on its way.</h2>
+    <p>If you'd like one on your desk, tell Volo.</p>
+    <button class="btn bigheart love" type="button" data-love aria-label="Love Volo"><svg class="heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.5 2.6.9-1.4 2.4-2.6 4.5-2.6 3.7 0 5.8 3.8 4.3 7.2C19.5 16.4 12 21 12 21z"/></svg><span>I love Volo</span></button>
+    <span class="lovecount" id="lovecount" aria-live="polite">Tap it. Volo will notice.</span>
+  </section>
+
+  <footer>
+    <span>Volitio · the will to act</span>
+    <span>Made in Coimbatore</span>
+  </footer>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const bot = $('#volo'), mover = $('#mover'), stage = $('#stage'), door = $('#door'), bubble = $('#bubble'), notes = $('#notes');
+  const pupils = [...document.querySelectorAll('.pupil')];
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const sleep = ms => new Promise(r => setTimeout(r, reduced ? Math.min(ms, 400) : ms));
+  let pose = 'idle', muted = false, busy = false, flipped = false, mouse = null, actx;
+
+  const setPose = p => { pose = p; bot.dataset.pose = p; eyes(); };
+  const think = on => bot.dataset.think = on ? '1' : '0';
+  const flip = v => { flipped = v; bot.classList.toggle('flip', v); };
+  function say(t, ms = 2200){ bubble.textContent = t; bubble.classList.add('show'); clearTimeout(say.t); say.t = setTimeout(() => bubble.classList.remove('show'), ms); }
+
+  addEventListener('pointermove', e => { mouse = {x:e.clientX, y:e.clientY}; eyes(); }, {passive:true});
+  function eyes(){
+    if(!mouse || pose === 'nap') return;
+    pupils.forEach(p => {
+      const r = p.getBoundingClientRect(), cx = r.left + r.width/2, cy = r.top + r.height/2;
+      const dx = mouse.x - cx, dy = mouse.y - cy, d = Math.hypot(dx, dy) || 1, m = Math.min(d, 90) / 90 * 6;
+      p.style.transform = `translate(${((flipped ? -1 : 1) * dx / d * m).toFixed(1)}px,${(dy / d * m).toFixed(1)}px)`;
+    });
+  }
+  function sparkle(n = 8){
+    if(reduced) return;
+    const s = stage.getBoundingClientRect(), b = bot.getBoundingClientRect();
+    const x = b.left - s.left + b.width/2, y = b.top - s.top + b.height*.35;
+    for(let i = 0; i < n; i++){
+      const el = document.createElement('span'); el.className = 'spark' + (i % 2 ? ' light' : '');
+      const a = (Math.PI*2/n)*i + Math.random()*.5, r = 60 + Math.random()*50;
+      el.style.cssText = `left:${x}px;top:${y}px;--dx:${Math.cos(a)*r}px;--dy:${Math.sin(a)*r - 20}px`;
+      stage.appendChild(el); setTimeout(() => el.remove(), 950);
+    }
+  }
+  function chirp(kind){
+    if(muted) return;
+    try{
+      actx = actx || new (window.AudioContext || window.webkitAudioContext)();
+      const now = actx.currentTime;
+      const seq = kind === 'happy' ? [[880,0],[1320,.09],[1760,.18]] : kind === 'done' ? [[1046,0],[1568,.11]] : [[660,0],[990,.1]];
+      seq.forEach(([f,o]) => { const osc = actx.createOscillator(), g = actx.createGain(); osc.type = 'sine'; osc.frequency.value = f;
+        g.gain.setValueAtTime(0, now+o); g.gain.linearRampToValueAtTime(.12, now+o+.01); g.gain.exponentialRampToValueAtTime(.001, now+o+.1);
+        osc.connect(g).connect(actx.destination); osc.start(now+o); osc.stop(now+o+.12); });
+    }catch(e){}
+  }
+  const icon = '<svg viewBox="0 0 120 120"><polyline points="28,52 60,100 92,52" stroke="#F4F2ED" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="60" cy="28" r="10" fill="#FF5A1F"/></svg>';
+  function notify(text){
+    const el = document.createElement('div'); el.className = 'note';
+    el.innerHTML = `<div class="ic">${icon}</div><div><b>Volo <span>now</span></b><p>${text} <i>✓</i></p></div>`;
+    notes.prepend(el);
+    while(notes.children.length > 2) notes.lastChild.remove();
+    setTimeout(() => { el.classList.add('out'); setTimeout(() => el.remove(), 400); }, 4200);
+  }
+
+  async function toDoor(){
+    const b = bot.getBoundingClientRect(), d = door.getBoundingClientRect();
+    setPose('walk'); mover.style.transform = `translateX(${Math.max(40, d.left - b.right - 6)}px)`; await sleep(2400); setPose('idle');
+  }
+  async function back(){ await sleep(600); flip(true); setPose('walk'); mover.style.transform = 'translateX(0)'; await sleep(2400); flip(false); setPose('idle'); }
+
+  const moves = {
+    hi:    {label:'Say hi', re:/\bhi\b|hello|hey|greet|wave|vanakkam|namaste|morning/i, done:'Said hi to you.', run: async()=>{ setPose('greet'); chirp('happy'); sparkle(10); await sleep(1800); setPose('idle'); }},
+    dance: {label:'Dance', re:/danc|party|wiggle|celebrat|music/i, done:'Danced. Did not fall over.', run: async()=>{ setPose('dance'); chirp('happy'); await sleep(2600); setPose('idle'); }},
+    door:  {label:'Go to the door', re:/door|gate|go to|walk|patrol|come/i, done:'Reached the door.', run: toDoor, after: back},
+    nap:   {label:'Nap', re:/nap|sleep|rest|bed/i, done:'Napping. Say “wake up” to wake me.', run: async()=>{ setPose('sit'); await sleep(600); setPose('nap'); say('zzz…'); await sleep(1400); }},
+    stomp: {label:'Stomp', re:/stomp|march|knock|alarm|wake me/i, done:'Stomped six times.', run: async()=>{ setPose('stomp'); await sleep(1900); setPose('idle'); }},
+    sit:   {label:'Sit', re:/\bsit\b/i, done:'Sitting.', run: async()=>{ setPose('sit'); await sleep(1200); }},
+    wake:  {label:'Wake up', re:/wake up|get up|stand|\bup\b/i, done:'Awake and ready.', run: async()=>{ setPose('idle'); await sleep(700); }},
+    look:  {label:'Look around', re:/look|watch|check|find|see|guard/i, done:'Looked around. All good.', run: async()=>{ setPose('look'); await sleep(1500); setPose('idle'); }},
+  };
+  const order = ['hi','dance','door','nap','stomp'];
+
+  function setBusy(b){ busy = b; document.querySelectorAll('.chip').forEach(c => c.disabled = b); }
+  async function run(key){
+    const m = moves[key];
+    say(m.label + '…', 1500);
+    await m.run();
+    chirp('done'); notify(m.done);
+    if(m.after) await m.after();
+  }
+  async function command(text){
+    const t = text.trim(); if(!t || busy) return;
+    setBusy(true);
+    let key = Object.keys(moves).find(k => moves[k].label.toLowerCase() === t.toLowerCase()) || Object.keys(moves).find(k => moves[k].re.test(t));
+    if(key){ await run(key); setBusy(false); return; }
+    // something new: Volo thinks, then strings together moves it knows
+    think(true); say('Hmm, let me figure that out…', 1800); await sleep(1700); think(false);
+    const picks = ['door','hi','dance','look'].filter(k => moves[k].re.test(t));
+    const seq = picks.length ? picks : ['look','hi'];
+    for(const k of seq){ say(moves[k].label + '…', 1300); await moves[k].run(); }
+    chirp('done'); notify(`Done: “${t.length > 40 ? t.slice(0,40) + '…' : t}”`);
+    if(seq.includes('door')) await back();
+    setBusy(false);
+  }
+
+  const chips = $('#chips');
+  order.forEach(k => { const b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = moves[k].label; b.addEventListener('click', () => command(moves[k].label)); chips.appendChild(b); });
+  $('#sayform').addEventListener('submit', e => { e.preventDefault(); const i = $('#say'), v = i.value; i.value = ''; command(v); });
+  bot.addEventListener('click', () => {
+    chirp(); sparkle(6); say(['Hi!','Beep!','Ready when you are.','That tickles.'][Math.floor(Math.random()*4)], 1500);
+    if(busy || pose === 'nap') return;
+    setPose('happy'); setTimeout(() => { if(pose === 'happy') setPose('idle'); }, 600);
+  });
+  $('#mute').addEventListener('click', e => { muted = !muted; e.currentTarget.setAttribute('aria-pressed', String(muted)); e.currentTarget.setAttribute('aria-label', muted ? 'Unmute Volo' : 'Mute Volo'); });
+
+  // love: kept in this browser only, so we never show a made-up public count
+  const heartPath = 'M12 21s-7.5-4.6-9.6-9.3C.9 8.3 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.5 2.6.9-1.4 2.4-2.6 4.5-2.6 3.7 0 5.8 3.8 4.3 7.2C19.5 16.4 12 21 12 21z';
+  let loves = 0;
+  try{ loves = parseInt(localStorage.getItem('volo.loves') || '0', 10) || 0; }catch(e){}
+  const loveBtns = [...document.querySelectorAll('[data-love]')], lovecount = $('#lovecount');
+  function renderLove(){
+    loveBtns.forEach(b => b.classList.toggle('loved', loves > 0));
+    if(loves > 0) lovecount.textContent = loves === 1 ? 'Volo felt that. Thank you.' : `You've sent Volo love ${loves} times.`;
+  }
+  function burst(el, n = 7){
+    if(reduced) return;
+    const r = el.getBoundingClientRect();
+    for(let i = 0; i < n; i++){
+      const h = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      h.setAttribute('viewBox', '0 0 24 24'); h.setAttribute('class', 'floatheart'); h.innerHTML = `<path d="${heartPath}"/>`;
+      h.style.left = (r.left + r.width/2 - 11 + (Math.random()*30 - 15)) + 'px'; h.style.top = (r.top + r.height/2 - 11) + 'px';
+      h.style.setProperty('--dx', (Math.random()*120 - 60) + 'px'); h.style.setProperty('--rot', (Math.random()*50 - 25) + 'deg');
+      h.style.animationDelay = (i * 60) + 'ms';
+      document.body.appendChild(h); setTimeout(() => h.remove(), 1300 + i*60);
+    }
+  }
+  loveBtns.forEach(b => b.addEventListener('click', () => {
+    loves++; try{ localStorage.setItem('volo.loves', String(loves)); }catch(e){}
+    renderLove(); burst(b); chirp('happy');
+    const lines = ['Aww. Thank you!', 'Right back at you.', 'That made my day.', 'Love you too!'];
+    say(lines[(loves - 1) % lines.length], 2000);
+    if(!busy && pose !== 'nap'){ setPose('greet'); burst(bot, 5); setTimeout(() => { if(pose === 'greet') setPose('idle'); }, 1600); }
+  }));
+  renderLove();
+
+  setTimeout(() => { if(!busy) say('Hi! Tap me.', 2400); }, 900);
+})();
+</script>
+</body>
+</html>
